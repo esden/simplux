@@ -20,6 +20,23 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 
+u16 anim[10][8] = {
+  {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80},
+  {0x00, 0x00, 0x03, 0x0C, 0x30, 0xC0, 0x00, 0x00},
+  {0x00, 0x00, 0x00, 0x0F, 0xF0, 0x00, 0x00, 0x00},
+  {0x00, 0x00, 0x00, 0xF0, 0x0F, 0x00, 0x00, 0x00},
+  {0x00, 0x00, 0xC0, 0x30, 0x0C, 0x03, 0x00, 0x00},
+  {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01},
+  {0x20, 0x20, 0x10, 0x10, 0x08, 0x08, 0x04, 0x04},
+  {0x10, 0x10, 0x10, 0x10, 0x08, 0x08, 0x08, 0x08},
+  {0x08, 0x08, 0x08, 0x08, 0x10, 0x10, 0x10, 0x10},
+  {0x04, 0x04, 0x08, 0x08, 0x10, 0x10, 0x20, 0x20},
+};
+int anim_frames = 10;
+
+int frame_count = 0;
+int frame_delay = 0;
+
 /* Set STM32 to 72 MHz. */
 void clock_setup(void)
 {
@@ -65,85 +82,82 @@ void gpio_setup(void)
 
 }
 
-//int bmap[8] = {0x66, 0x99, 0x99, 0x66, 0x24, 0xAA, 0x55, 0xAA};
-//int bmap[8] = {0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55, 0xAA, 0x55};
-int bmap[8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
-u16 anim[10][8] = {
-  {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80},
-  {0x00, 0x00, 0x03, 0x0C, 0x30, 0xC0, 0x00, 0x00},
-  {0x00, 0x00, 0x00, 0x0F, 0xF0, 0x00, 0x00, 0x00},
-  {0x00, 0x00, 0x00, 0xF0, 0x0F, 0x00, 0x00, 0x00},
-  {0x00, 0x00, 0xC0, 0x30, 0x0C, 0x03, 0x00, 0x00},
-  {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01},
-  {0x20, 0x20, 0x10, 0x10, 0x08, 0x08, 0x04, 0x04},
-  {0x10, 0x10, 0x10, 0x10, 0x08, 0x08, 0x08, 0x08},
-  {0x08, 0x08, 0x08, 0x08, 0x10, 0x10, 0x10, 0x10},
-  {0x04, 0x04, 0x08, 0x08, 0x10, 0x10, 0x20, 0x20},
-};
-int anim_frames = 10;
-
-int frame_count = 0;
-int frame_delay = 0;
-
-int main(void)
+void clear_rows()
 {
-	int i, j;
-
-	clock_setup();
-	gpio_setup();
-
 	/* set all rows to off */
 	GPIO_BSRR(GPIOA) = 0xCF;
 	GPIO_BSRR(GPIOB) = 0x03;
+}
 
-	gpio_clear(GPIOB, GPIO7);
-	gpio_clear(GPIOB, GPIO8);
-	gpio_set(GPIOB, GPIO9);
+void clear_cols()
+{
+  int i;
 
-	for (i = 0; i < 8; i++) {
-		gpio_clear(GPIOB, GPIO6);
-		for (j = 0; j < 80000; j++)	/* Wait a bit. */
-			__asm__("nop");
-		gpio_set(GPIOB, GPIO6);
-		for (j = 0; j < 80000; j++)	/* Wait a bit. */
-			__asm__("nop");
-	}
+  /* Initialize the state of the shift register control pins */
+  gpio_clear(GPIOB, GPIO7);
+  gpio_clear(GPIOB, GPIO8);
+  gpio_set(GPIOB, GPIO9);
 
-	while (1) {
-	  /* We are at the first column so we are shifting one bit into the shift register. */
-	  gpio_set(GPIOB, GPIO7); /* data pin = 1 */
-	  for (i = 0; i < 8; i++) {
-	    /* advancing the shift register clock by one. */
-	    gpio_clear(GPIOB, GPIO6);
-	    gpio_set(GPIOB, GPIO6);
+  /* Erase the content of the shift register */
+  for (i = 0; i < 8; i++) {
+    gpio_clear(GPIOB, GPIO6);
+    gpio_set(GPIOB, GPIO6);
+  }
+}
 
-	    /* All subsequent 7 bits will be zero from now on. */
-	    gpio_clear(GPIOB, GPIO7); /* data pin = 0 */
+void render_frame(u16 *frame_data)
+{
+  int i, j;
 
-	    /* Set the correct rows to on according to animation data */
-	    GPIO_BRR(GPIOA) = anim[frame_count][i] & 0x0F;
-	    GPIO_BRR(GPIOA) = (anim[frame_count][i] & 0x30) << 2;
-	    GPIO_BRR(GPIOB) = (anim[frame_count][i] & 0xC0) >> 6;
+  /* We are at the first column so we are shifting one bit into the shift register. */
+  gpio_set(GPIOB, GPIO7); /* data pin = 1 */
+  for (i = 0; i < 8; i++) {
+    /* advancing the shift register clock by one. */
+    gpio_clear(GPIOB, GPIO6);
+    gpio_set(GPIOB, GPIO6);
 
-	    for (j = 0; j < 5000; j++)	/* Wait a bit. */
-	      __asm__("nop");
+    /* All subsequent 7 bits will be zero from now on. */
+    gpio_clear(GPIOB, GPIO7); /* data pin = 0 */
 
-	    /* set all rows to off before we shift the shift register */
-	    GPIO_BSRR(GPIOA) = 0xCF;
-	    GPIO_BSRR(GPIOB) = 0x03;
+    /* Set the correct rows to on according to animation data */
+    GPIO_BRR(GPIOA) = frame_data[i] & 0x0F;
+    GPIO_BRR(GPIOA) = (frame_data[i] & 0x30) << 2;
+    GPIO_BRR(GPIOB) = (frame_data[i] & 0xC0) >> 6;
 
-	  }
+    for (j = 0; j < 5000; j++)	/* Wait a bit. */
+      __asm__("nop");
 
-	  /* Calculate next animation frame */
-	  frame_delay++;
-	  if(frame_delay >= 50) {
-	    frame_delay=0;
-	    frame_count++;
-	    if(frame_count >= anim_frames) {
-	      frame_count=0;
-	    }
-	  }
-	}
+    /* set all rows to off before we shift the shift register */
+    clear_rows();
 
-	return 0;
+  }
+}
+
+int main(void)
+{
+  //int i, j;
+
+  clock_setup();
+  gpio_setup();
+
+  /* clear rows and columns */
+  clear_rows();
+  clear_cols();
+
+  while (1) {
+    /* Render one single frame */
+    render_frame(anim[frame_count]);
+
+    /* Calculate next animation frame */
+    frame_delay++;
+    if(frame_delay >= 50) {
+      frame_delay=0;
+      frame_count++;
+      if(frame_count >= anim_frames) {
+	frame_count=0;
+      }
+    }
+  }
+
+  return 0;
 }
