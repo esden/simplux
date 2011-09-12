@@ -1,7 +1,7 @@
 /*
- * This file is part of the libopencm3 project.
+ * This file is part of the simplux project.
  *
- * Copyright (C) 2009 Uwe Hermann <uwe@hermann-uwe.de>
+ * Copyright (C) 2011 Piotr Esden-Tempski <piotr@esden.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* Linker script for Olimex STM32-H103 (STM32F103RBT6, 128K flash, 20K RAM). */
+/* Linker script for Simplux 8x8 matrix board (STM32F103RBT6, 128K flash, 20K RAM). */
 
 /* Define memory regions. */
 MEMORY

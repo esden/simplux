@@ -1,7 +1,7 @@
 /*
- * This file is part of the libopencm3 project.
+ * This file is part of the simplux project.
  *
- * Copyright (C) 2009 Uwe Hermann <uwe@hermann-uwe.de>
+ * Copyright (C) 2011 Piotr Esden-Tempski <piotr@esden.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ void clock_setup(void)
 {
 	rcc_clock_setup_in_hse_8mhz_out_72mhz();
 
-	/* Enable GPIOC clock. */
+	/* Enable GPIOA and GPIOB clock. */
 	rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_IOPAEN);
 	rcc_peripheral_enable_clock(&RCC_APB2ENR, RCC_APB2ENR_IOPBEN);
 
@@ -109,7 +109,6 @@ int main(void)
 			__asm__("nop");
 	}
 
-	/* Blink the LED (PC12) on the board. */
 	while (1) {
 	  /* We are at the first column so we are shifting one bit into the shift register. */
 	  gpio_set(GPIOB, GPIO7); /* data pin = 1 */
