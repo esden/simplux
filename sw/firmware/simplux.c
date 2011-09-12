@@ -92,14 +92,9 @@ int main(void)
 	clock_setup();
 	gpio_setup();
 
-	gpio_set(GPIOA, GPIO0);
-	gpio_set(GPIOA, GPIO1);
-	gpio_set(GPIOA, GPIO2);
-	gpio_set(GPIOA, GPIO3);
-	gpio_set(GPIOA, GPIO6);
-	gpio_set(GPIOA, GPIO7);
-	gpio_set(GPIOB, GPIO0);
-	gpio_set(GPIOB, GPIO1);
+	/* set all rows to off */
+	GPIO_BSRR(GPIOA) = 0xCF;
+	GPIO_BSRR(GPIOB) = 0x03;
 
 	gpio_clear(GPIOB, GPIO7);
 	gpio_clear(GPIOB, GPIO8);
