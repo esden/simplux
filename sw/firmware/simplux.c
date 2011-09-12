@@ -20,7 +20,7 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 
-u16 anim[10][8] = {
+u8 anim[10][8] = {
   {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80},
   {0x00, 0x00, 0x03, 0x0C, 0x30, 0xC0, 0x00, 0x00},
   {0x00, 0x00, 0x00, 0x0F, 0xF0, 0x00, 0x00, 0x00},
@@ -105,7 +105,7 @@ void clear_cols()
   }
 }
 
-void render_frame(u16 *frame_data)
+void render_frame(u8 *frame_data)
 {
   int i, j;
 
@@ -133,6 +133,44 @@ void render_frame(u16 *frame_data)
   }
 }
 
+void animate_startup()
+{
+  u8 frame[8];
+  int startup_animation_run = 1;
+  int i;
+
+  /* initialize first frame */
+  for(i=0; i<8; i++) {
+    frame[i] = 1;
+  }
+
+  /* reset animation counter variables */
+  frame_delay = 0;
+  frame_count = 0;
+
+  while (startup_animation_run) {
+    render_frame(frame);
+
+    frame_delay++;
+    if (frame_delay >= 50) {
+      frame_delay = 0;
+      frame_count++;
+      if(frame_count < 8) {
+	for(i=0; i<8; i++) {
+	  frame[i] <<= 1;
+	}
+      } else if (frame_count < 16) {
+	for(i=0; i<8; i++) {
+	  frame[i] = 0;
+	}
+	frame[frame_count - 8] = 0xFF;
+      } else {
+	startup_animation_run = 0;
+      }
+    }
+  }
+}
+
 int main(void)
 {
   //int i, j;
@@ -143,6 +181,11 @@ int main(void)
   /* clear rows and columns */
   clear_rows();
   clear_cols();
+
+  animate_startup();
+
+  frame_count = 0;
+  frame_delay = 0;
 
   while (1) {
     /* Render one single frame */
