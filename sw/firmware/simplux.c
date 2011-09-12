@@ -111,35 +111,39 @@ int main(void)
 
 	/* Blink the LED (PC12) on the board. */
 	while (1) {
-	gpio_set(GPIOB, GPIO7);
-	for (i = 0; i < 8; i++) {
-		gpio_clear(GPIOB, GPIO6);
-		gpio_set(GPIOB, GPIO6);
-		gpio_clear(GPIOB, GPIO6);
+	  /* We are at the first column so we are shifting one bit into the shift register. */
+	  gpio_set(GPIOB, GPIO7); /* data pin = 1 */
+	  for (i = 0; i < 8; i++) {
+	    /* advancing the shift register clock by one. */
+	    gpio_clear(GPIOB, GPIO6);
+	    gpio_set(GPIOB, GPIO6);
 
-		/* Set the correct rows to on according to animation data */
-		GPIO_BRR(GPIOA) = anim[frame_count][i] & 0x0F;
-		GPIO_BRR(GPIOA) = (anim[frame_count][i] & 0x30) << 2;
-		GPIO_BRR(GPIOB) = (anim[frame_count][i] & 0xC0) >> 6;
+	    /* All subsequent 7 bits will be zero from now on. */
+	    gpio_clear(GPIOB, GPIO7); /* data pin = 0 */
 
-		/* Calculate next frame */
-		frame_delay++;
-		if(frame_delay >= 200) {
-			frame_delay=0;
-			frame_count++;
-			if(frame_count >= anim_frames) {
-				frame_count=0;
-			}
-		}
-		for (j = 0; j < 5000; j++)	/* Wait a bit. */
-			__asm__("nop");
-		gpio_clear(GPIOB, GPIO7);
+	    /* Set the correct rows to on according to animation data */
+	    GPIO_BRR(GPIOA) = anim[frame_count][i] & 0x0F;
+	    GPIO_BRR(GPIOA) = (anim[frame_count][i] & 0x30) << 2;
+	    GPIO_BRR(GPIOB) = (anim[frame_count][i] & 0xC0) >> 6;
 
-		/* set all rows to off before we shift the shift register */
-		GPIO_BSRR(GPIOA) = 0xCF;
-		GPIO_BSRR(GPIOB) = 0x03;
+	    for (j = 0; j < 5000; j++)	/* Wait a bit. */
+	      __asm__("nop");
 
-	}
+	    /* set all rows to off before we shift the shift register */
+	    GPIO_BSRR(GPIOA) = 0xCF;
+	    GPIO_BSRR(GPIOB) = 0x03;
+
+	  }
+
+	  /* Calculate next animation frame */
+	  frame_delay++;
+	  if(frame_delay >= 50) {
+	    frame_delay=0;
+	    frame_count++;
+	    if(frame_count >= anim_frames) {
+	      frame_count=0;
+	    }
+	  }
 	}
 
 	return 0;
