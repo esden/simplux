@@ -33,44 +33,36 @@ void clock_setup(void)
 
 void gpio_setup(void)
 {
-	/* Row 0 */
+	/* Row 0..5 */
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_OPENDRAIN, GPIO0);
-	/* Row 1 */
-	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_OPENDRAIN, GPIO1);
-	/* Row 2 */
-	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_OPENDRAIN, GPIO2);
-	/* Row 3 */
-	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_OPENDRAIN, GPIO3);
-	/* Row 4 */
-	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_OPENDRAIN, GPIO6);
-	/* Row 5 */
-	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_OPENDRAIN, GPIO7);
-	/* Row 6 */
+		      GPIO_CNF_OUTPUT_OPENDRAIN,
+		      GPIO0 |
+		      GPIO1 |
+		      GPIO2 |
+		      GPIO3 |
+		      GPIO6 |
+		      GPIO7);
+
+	/* Row 6 and 7 */
 	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_OPENDRAIN, GPIO0);
-	/* Row 7 */
-	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_OPENDRAIN, GPIO1);
+		      GPIO_CNF_OUTPUT_OPENDRAIN,
+		      GPIO0 |
+		      GPIO1);
 
 
-	/* Col Clk */
+	/* Shift register gpio
+	 * PB6: Col Clk
+	 * PB7: Col Data
+	 * PB8: Col Output Enable
+	 * PB9: Col Latch
+	 */
 	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO6);
-	/* Col Data */
-	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO7);
-	/* Col OEn */
-	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO8);
-	/* Col Latch */
-	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO9);
+		      GPIO_CNF_OUTPUT_PUSHPULL,
+		      GPIO6 |
+		      GPIO7 |
+		      GPIO8 |
+		      GPIO9);
+
 }
 
 //int bmap[8] = {0x66, 0x99, 0x99, 0x66, 0x24, 0xAA, 0x55, 0xAA};
